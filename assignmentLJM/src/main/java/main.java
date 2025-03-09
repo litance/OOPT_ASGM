@@ -67,9 +67,14 @@ public class main {
                 + "username VARCHAR(50) PRIMARY KEY,"
                 + "password VARCHAR(50) NOT NULL)";
 
+
         String createStaffTable = "CREATE TABLE IF NOT EXISTS staff ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "username VARCHAR(50) PRIMARY KEY,"
-                + "password VARCHAR(50) NOT NULL)";
+                + "password VARCHAR(50) NOT NULL)"
+                + "phonenumber VARCHAR(50),"
+                + "gender CHAR(1),"
+                + "position VARCHAR(50)";
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {
@@ -132,6 +137,12 @@ class user {
         String username = sc.nextLine();
         System.out.print("Enter password: ");
         String password = sc.nextLine();
+        System.out.print("Enter phone number: ");
+        String phonenumber = sc.nextLine();
+        System.out.print("Enter gender(M/F: ");
+        String gender = sc.nextLine();
+        System.out.print("Enter position: ");
+        String position = sc.nextLine();
 
         String checkQuery = "SELECT username FROM staff WHERE username = ?";
         try (Connection conn = DriverManager.getConnection(main.url);
@@ -148,11 +159,20 @@ class user {
             return;
         }
 
-        String insertRegister = "INSERT INTO staff (username, password) VALUES (?, ?)";
+        String insertRegister = "INSERT INTO staff (" +
+                "username, " +
+                "password, " +
+                "phonenumber, " +
+                "gender, " +
+                "position) " +
+                "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(main.url);
              PreparedStatement pstmt = conn.prepareStatement(insertRegister)) {
             pstmt.setString(1, username);
             pstmt.setString(2, password);
+            pstmt.setString(3, phonenumber);
+            pstmt.setString(4, gender);
+            pstmt.setString(5, position);
             pstmt.executeUpdate();
             System.out.println(main.ANSI_PURPLE + "Successfully registered!" + main.ANSI_RESET);
         } catch (SQLException e) {
@@ -201,6 +221,29 @@ class user {
         System.out.println(main.ANSI_RED + "Invalid credentials." + main.ANSI_RESET);
         return "guest";
     }
+
+    public static void deleteStaff() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter Username to delete: ");
+        String username = sc.nextLine();
+        String query = "DELETE FROM staff WHERE username = ?";
+
+        try (Connection conn = DriverManager.getConnection(main.url);
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, username);
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Successfully deleted staff: " + username);
+            } else {
+                System.out.println("Staff member not found: " + username);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }
+    }
 }
 
 class page {
@@ -211,13 +254,76 @@ class page {
 
     }
 
+    static class manageStaff {
+        public static void printTableData(String tableName) {
+            String query = "SELECT * FROM " + tableName;
+
+            try (Connection conn = DriverManager.getConnection(main.url);
+                 Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(query)) {
+
+                ResultSetMetaData metaData = rs.getMetaData();
+                int columnCount = metaData.getColumnCount();
+
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.print(metaData.getColumnName(i) + "\t");
+                }
+                System.out.println("\n-------------------------------------------------");
+
+                while (rs.next()) {
+                    for (int i = 1; i <= columnCount; i++) {
+                        System.out.print(rs.getString(i) + "\t");
+                    }
+                    System.out.println();
+                }
+
+            } catch (SQLException e) {
+                System.out.println("Database Error: " + e.getMessage());
+            }
+        }
+
+        public static void pageChoose() {
+            Scanner sc = new Scanner(System.in);
+            while (true) {
+                System.out.println(main.ANSI_GREEN + "[1] Edit Staff" + main.ANSI_RESET);
+                System.out.println(main.ANSI_GREEN + "[2] View Staff" + main.ANSI_RESET);
+                System.out.println(main.ANSI_RED + "[3] Delete Staff" + main.ANSI_RESET);
+                System.out.println(main.ANSI_YELLOW + "[0] Return" + main.ANSI_RESET);
+                System.out.print(main.ANSI_BLUE + "Please enter your choice: " + main.ANSI_RESET);
+                int pageChoice;
+                if (sc.hasNextInt()) {
+                    pageChoice = sc.nextInt();
+                } else {
+                    System.out.println(main.ANSI_RED + "Please enter a number!" + main.ANSI_RESET);
+                    sc.next();
+                    continue;
+                }
+                switch (pageChoice) {
+                    case 1:
+                        break;
+                    case 2:
+                        printTableData("staff");
+                        break;
+                    case 3:
+                        user.deleteStaff();
+                        break;
+                    case 0:
+                        return;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
     //This is backstage
     //Usually I dunno how your guys part
     //So I put a Report page first lah
     public static void managementPage(String role, Scanner sc) {
         while(true) {
             System.out.println(main.ANSI_GREEN + "[1] Register Staff" +main.ANSI_RESET);
-            System.out.println(main.ANSI_GREEN + "[2] Report" + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "[2] Manage Staff" +main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "[3] Report" + main.ANSI_RESET);
             System.out.println(main.ANSI_RED + "[0] Exit" + main.ANSI_RESET);
             System.out.print(main.ANSI_BLUE + "Enter your choice: " + main.ANSI_RESET);
             int choice;
@@ -232,6 +338,10 @@ class page {
                     user.register(role, sc);
                     break;
                 case 2:
+                    System.out.println("Manage Staff");
+                    manageStaff.pageChoose();
+                    break;
+                case 3:
                     System.out.println("Report");
                     break;
                 case 0:
@@ -272,6 +382,7 @@ class page {
                 case 0:
                     System.out.println("Return");
                     main.main(new String[]{});
+                    break;
                 default:
                     System.out.println(main.ANSI_RED + "Invalid choice! Please try again." + main.ANSI_RESET);
                     break;
