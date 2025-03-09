@@ -65,16 +65,16 @@ public class main {
         //I create two tables for different types of roles but usually the same lah
         String createAdminTable = "CREATE TABLE IF NOT EXISTS admin ("
                 + "username VARCHAR(50) PRIMARY KEY,"
-                + "password VARCHAR(50) NOT NULL)";
+                + "password VARCHAR(50) NOT NULL);";
 
 
         String createStaffTable = "CREATE TABLE IF NOT EXISTS staff ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "username VARCHAR(50) PRIMARY KEY,"
-                + "password VARCHAR(50) NOT NULL)"
+                + "username VARCHAR(50) UNIQUE NOT NULL,"
+                + "password VARCHAR(50) NOT NULL,"
                 + "phonenumber VARCHAR(50),"
                 + "gender CHAR(1),"
-                + "position VARCHAR(50)";
+                + "position VARCHAR(50));";
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {
