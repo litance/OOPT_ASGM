@@ -1,13 +1,10 @@
-//080325Version
+//090325Version
 //Need to connect sql, please whatsapp me to get details.
 //Or you can search about how to import SQLite in Java
 //Please download SQLite extension
 
-//I dunno why I cant use SQLite in VSCode
-//Maybe try try?
-
 //My program got three role call: guest, admin and staff
-//These role got different permision
+//These role got different permission
 //This version guest and staff only can login
 //Admin can register staff
 
@@ -30,9 +27,8 @@ public class main {
 
         while (true) {
             System.out.println("[1] Login");
-            System.out.println("[2] Register");
-            System.out.println("[3] Logout");
-            System.out.println("[4] Exit");
+            System.out.println("[2] Logout");
+            System.out.println("[3] Exit");
             System.out.print("Enter your choice: ");
 
             int staffPageChoice;
@@ -49,13 +45,10 @@ public class main {
                     role = userCheck.login(sc);
                     break;
                 case 2:
-                    userCheck.register(role, sc);
-                    break;
-                case 3:
                     System.out.println("Logout successful!");
                     role = "guest";
                     break;
-                case 4:
+                case 3:
                     System.out.println("Exiting...");
                     sc.close();
                     return;
@@ -66,7 +59,7 @@ public class main {
     }
 
     public static void database() {
-        //I create two table for defferent type of role but usually same lah
+        //I create two table for different types of role but usually same lah
         String createAdminTable = "CREATE TABLE IF NOT EXISTS admin ("
                 + "username VARCHAR(50) PRIMARY KEY,"
                 + "password VARCHAR(50) NOT NULL)";
@@ -85,7 +78,7 @@ public class main {
             try (Statement checkStmt = conn.createStatement();
                  ResultSet rs = checkStmt.executeQuery(checkAdmin)) {
                 if (rs.next() && rs.getInt(1) == 0) {
-                    //This is test insert
+                    //This is testing insert
                     //Not safe because everybody know admin acc
                     String insertAdmin = "INSERT INTO admin (username, password) VALUES ('admin', '12345')";
                     stmt.execute(insertAdmin);
@@ -122,7 +115,7 @@ class UserCheck {
     }
 
     //Admin role needed to reg
-    public void register(String role, Scanner sc) {
+    public static void register(String role, Scanner sc) {
         if (!role.equals("admin")) {
             System.out.println("Warning! Admin permission needed!");
             System.out.println("You need to login as an Admin!");
@@ -180,8 +173,7 @@ class UserCheck {
             try (ResultSet rsAdmin = pstmtAdmin.executeQuery()) {
                 if (rsAdmin.next()) {
                     System.out.println("Admin Login Successful!");
-                    System.out.println("1, Admin Page");
-                    System.out.println("2, Main Page");
+                    page.pageChoose("admin", sc);
                     return "admin";
                 }
             }
@@ -191,6 +183,7 @@ class UserCheck {
             try (ResultSet rsStaff = pstmtStaff.executeQuery()) {
                 if (rsStaff.next()) {
                     System.out.println("Staff Login Successful!");
+                    page.pageChoose("staff", sc);
                     return "staff";
                 }
             }
@@ -201,5 +194,75 @@ class UserCheck {
 
         System.out.println("Invalid credentials.");
         return "guest";
+    }
+}
+
+class page {
+    //After login, staff can process Borrow/Return Book here
+    //I havent add the function yet
+    //This is just a temp save
+    public static void mainPage() {
+
+    }
+
+    //This is backstage
+    //Usually I dunno how your guys part
+    //So I put a Report page first lah
+    public static void managementPage(String role, Scanner sc) {
+        while(true) {
+            System.out.println("[1] Register Staff");
+            System.out.println("[2] Report");
+            System.out.println("[3] Exit");
+            System.out.print("Enter your choice: ");
+            String choice;
+            if (sc.hasNextInt()) {
+                choice = sc.nextLine();
+            } else {
+                System.out.println("Invalid input! Please enter a number.");
+                continue;
+            }
+            switch (choice) {
+                case "1":
+                    UserCheck.register(role, sc);
+                    break;
+                case "2":
+                    System.out.println("Report");
+                    break;
+                case "3":
+                    System.out.println("Exit");
+                    return;
+                default:
+                    System.out.println("Invalid choice! Please try again.");
+                    break;
+            }
+        }
+    }
+
+    public static void pageChoose(String role, Scanner sc) {
+        while (true) {
+            System.out.println("1, Main Page");
+            System.out.println("2, Management Page");
+            System.out.print("Choose your choice: ");
+
+            int pageChoice;
+            if (sc.hasNextInt()) {
+                pageChoice = sc.nextInt();
+            } else {
+                System.out.println("Invalid input! Please enter a number.");
+                sc.next();
+                continue;
+            }
+
+            switch(pageChoice){
+                case 1:
+                    System.out.println("Main Page");
+                    page.mainPage();
+                    break;
+                case 2:
+                    System.out.println("Management Page");
+                    page.managementPage(role, sc);
+                    break;
+            }
+        }
     }
 }
