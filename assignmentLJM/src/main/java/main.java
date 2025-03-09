@@ -46,6 +46,9 @@ public class main {
             switch (staffPageChoice) {
                 case 1:
                     role = user.login(sc);
+                    if (!role.equals("guest")) {
+                        page.pageChoose(role, sc);
+                    }
                     break;
                 case 2:
                     System.out.println(ANSI_PURPLE + "Logout successful!" + ANSI_RESET);
@@ -62,41 +65,51 @@ public class main {
     }
 
     public static void database() {
-        //I create two tables for different types of roles but usually the same lah
-        String createAdminTable = "CREATE TABLE IF NOT EXISTS admin ("
-                + "username VARCHAR(50) PRIMARY KEY,"
-                + "password VARCHAR(50) NOT NULL);";
+        String createAdminTable = "CREATE TABLE IF NOT EXISTS admin (" +
+                "username VARCHAR(50) PRIMARY KEY," +
+                "password VARCHAR(50) NOT NULL);";
 
+        String createStaffTable = "CREATE TABLE IF NOT EXISTS staff (" +
+                "username VARCHAR(50) UNIQUE NOT NULL," +
+                "password VARCHAR(50) NOT NULL," +
+                "phonenumber VARCHAR(50)," +
+                "gender CHAR(1)," +
+                "position VARCHAR(50));";
 
-        String createStaffTable = "CREATE TABLE IF NOT EXISTS staff ("
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "username VARCHAR(50) UNIQUE NOT NULL,"
-                + "password VARCHAR(50) NOT NULL,"
-                + "phonenumber VARCHAR(50),"
-                + "gender CHAR(1),"
-                + "position VARCHAR(50));";
+        Connection conn = null;
+        Statement stmt = null;
+        Statement checkStmt = null;
+        ResultSet rs = null;
 
-        try (Connection conn = DriverManager.getConnection(url);
-             Statement stmt = conn.createStatement()) {
-
+        try {
+            conn = DriverManager.getConnection(main.url);
+            stmt = conn.createStatement();
             stmt.execute(createAdminTable);
             stmt.execute(createStaffTable);
 
             String checkAdmin = "SELECT COUNT(*) FROM admin WHERE username = 'admin'";
-            try (Statement checkStmt = conn.createStatement();
-                 ResultSet rs = checkStmt.executeQuery(checkAdmin)) {
-                if (rs.next() && rs.getInt(1) == 0) {
-                    //This is testing insert
-                    //Not safe because everybody know admin acc
-                    String insertAdmin = "INSERT INTO admin (username, password) VALUES ('admin', '12345')";
-                    stmt.execute(insertAdmin);
-                    System.out.println(ANSI_RED + "Default admin account created: admin / 12345" + ANSI_RESET);
-                }
+            checkStmt = conn.createStatement();
+            rs = checkStmt.executeQuery(checkAdmin);
+
+            if (rs.next() && rs.getInt(1) == 0) {
+                String insertAdmin = "INSERT INTO admin (username, password) VALUES ('admin', '12345')";
+                stmt.execute(insertAdmin);
+                System.out.println(main.ANSI_RED + "Default admin account created: admin / 12345" + main.ANSI_RESET);
             }
         } catch (SQLException e) {
-            System.out.println(ANSI_RED + "Database Error: " + e.getMessage() + ANSI_RESET);
+            System.out.println(main.ANSI_RED + "Database Error: " + e.getMessage() + main.ANSI_RESET);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (checkStmt != null) checkStmt.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
+
 }
 
 //Check the username user wants to register exists or not
@@ -105,33 +118,10 @@ class user {
     //Admin role needed to reg
     public static void register(String role, Scanner sc) {
         if (!role.equals("admin")) {
-            while(true) {
-                System.out.println(main.ANSI_RED + "Warning! Admin permission needed!" + main.ANSI_RESET);
-                System.out.println(main.ANSI_YELLOW + "You need to login as an Admin!" + main.ANSI_RESET);
-                System.out.println(main.ANSI_GREEN +"[1] Return to Login" + main.ANSI_RESET);
-                System.out.println(main.ANSI_GREEN + "[2] Return to Management Page" + main.ANSI_RESET);
-                System.out.print(main.ANSI_BLUE + "Enter your choice: " + main.ANSI_RESET);
-                int returnChoice;
-                if (sc.hasNextInt()) {
-                    returnChoice = sc.nextInt();
-                } else{
-                    System.out.println(main.ANSI_RED + "Invalid input! Please enter a number." + main.ANSI_RESET);
-                    sc.next();
-                    continue;
-                }
-                switch (returnChoice) {
-                    case 1:
-                        role = user.login(sc);
-                        break;
-                    case 2:
-                        page.managementPage(role, sc);
-                        break;
-                    default:
-                        System.out.println(main.ANSI_RED + "Invalid choice. Please try again." + main.ANSI_RESET);
-                        break;
-                }
-            }
+            System.out.println(main.ANSI_RED + "Warning! Admin permission needed!" + main.ANSI_RESET);
+            return;
         }
+
         sc.nextLine();
         System.out.print("Enter username: ");
         String username = sc.nextLine();
@@ -139,35 +129,30 @@ class user {
         String password = sc.nextLine();
         System.out.print("Enter phone number: ");
         String phonenumber = sc.nextLine();
-        System.out.print("Enter gender(M/F: ");
+        System.out.print("Enter gender (M/F): ");
         String gender = sc.nextLine();
         System.out.print("Enter position: ");
         String position = sc.nextLine();
 
-        String checkQuery = "SELECT username FROM staff WHERE username = ?";
-        try (Connection conn = DriverManager.getConnection(main.url);
-             PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
-            checkStmt.setString(1, username);
-            try (ResultSet rs = checkStmt.executeQuery()) {
-                if (rs.next()) {
-                    System.out.println(main.ANSI_RED + "Error: Username already exists!" + main.ANSI_RESET);
-                    return;
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("Error: " + e.getMessage());
-            return;
-        }
+        Connection conn = null;
+        PreparedStatement checkStmt = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
 
-        String insertRegister = "INSERT INTO staff (" +
-                "username, " +
-                "password, " +
-                "phonenumber, " +
-                "gender, " +
-                "position) " +
-                "VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(main.url);
-             PreparedStatement pstmt = conn.prepareStatement(insertRegister)) {
+        try {
+            conn = DriverManager.getConnection(main.url);
+            String checkQuery = "SELECT username FROM staff WHERE username = ?";
+            checkStmt = conn.prepareStatement(checkQuery);
+            checkStmt.setString(1, username);
+            rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println(main.ANSI_RED + "Error: Username already exists!" + main.ANSI_RESET);
+                return;
+            }
+
+            String insertRegister = "INSERT INTO staff (username, password, phonenumber, gender, position) VALUES (?, ?, ?, ?, ?)";
+            pstmt = conn.prepareStatement(insertRegister);
             pstmt.setString(1, username);
             pstmt.setString(2, password);
             pstmt.setString(3, phonenumber);
@@ -175,8 +160,18 @@ class user {
             pstmt.setString(5, position);
             pstmt.executeUpdate();
             System.out.println(main.ANSI_PURPLE + "Successfully registered!" + main.ANSI_RESET);
+
         } catch (SQLException e) {
             System.out.println(main.ANSI_RED + "Error: " + e.getMessage() + main.ANSI_RESET);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (checkStmt != null) checkStmt.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -187,38 +182,51 @@ class user {
         System.out.print("Enter Password: ");
         String password = sc.nextLine();
 
-        String queryAdmin = "SELECT * FROM admin WHERE username = ? AND password = ?";
-        String queryStaff = "SELECT * FROM staff WHERE username = ? AND password = ?";
+        Connection conn = null;
+        PreparedStatement pstmtAdmin = null;
+        PreparedStatement pstmtStaff = null;
+        ResultSet rsAdmin = null;
+        ResultSet rsStaff = null;
 
-        try (Connection conn = DriverManager.getConnection(main.url);
-             PreparedStatement pstmtAdmin = conn.prepareStatement(queryAdmin);
-             PreparedStatement pstmtStaff = conn.prepareStatement(queryStaff)) {
+        try {
+            conn = DriverManager.getConnection(main.url);
 
+            String queryAdmin = "SELECT * FROM admin WHERE username = ? AND password = ?";
+            String queryStaff = "SELECT * FROM staff WHERE username = ? AND password = ?";
+
+            pstmtAdmin = conn.prepareStatement(queryAdmin);
             pstmtAdmin.setString(1, username);
             pstmtAdmin.setString(2, password);
-            try (ResultSet rsAdmin = pstmtAdmin.executeQuery()) {
-                if (rsAdmin.next()) {
-                    System.out.println(main.ANSI_PURPLE + "Admin Login Successful!" + main.ANSI_RESET);
-                    page.pageChoose("admin", sc);
-                    return "admin";
-                }
+            rsAdmin = pstmtAdmin.executeQuery();
+
+            if (rsAdmin.next()) {
+                System.out.println(main.ANSI_PURPLE + "Admin Login Successful!" + main.ANSI_RESET);
+                return "admin";
             }
 
+            pstmtStaff = conn.prepareStatement(queryStaff);
             pstmtStaff.setString(1, username);
             pstmtStaff.setString(2, password);
-            try (ResultSet rsStaff = pstmtStaff.executeQuery()) {
-                if (rsStaff.next()) {
-                    System.out.println(main.ANSI_PURPLE + "Staff Login Successful!" + main.ANSI_RESET);
-                    page.pageChoose("staff", sc);
-                    return "staff";
-                }
+            rsStaff = pstmtStaff.executeQuery();
+
+            if (rsStaff.next()) {
+                System.out.println(main.ANSI_PURPLE + "Staff Login Successful!" + main.ANSI_RESET);
+                return "staff";
             }
 
         } catch (SQLException e) {
             System.out.println(main.ANSI_RED + "Error: " + e.getMessage() + main.ANSI_RESET);
+        } finally {
+            try {
+                if (rsAdmin != null) rsAdmin.close();
+                if (rsStaff != null) rsStaff.close();
+                if (pstmtAdmin != null) pstmtAdmin.close();
+                if (pstmtStaff != null) pstmtStaff.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-
-        System.out.println(main.ANSI_RED + "Invalid credentials." + main.ANSI_RESET);
         return "guest";
     }
 
@@ -228,9 +236,12 @@ class user {
         String username = sc.nextLine();
         String query = "DELETE FROM staff WHERE username = ?";
 
-        try (Connection conn = DriverManager.getConnection(main.url);
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
 
+        try {
+            conn = DriverManager.getConnection(main.url);
+            pstmt = conn.prepareStatement(query);
             pstmt.setString(1, username);
             int rowsAffected = pstmt.executeUpdate();
 
@@ -242,8 +253,16 @@ class user {
 
         } catch (SQLException e) {
             System.out.println("Database Error: " + e.getMessage());
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
+
 }
 
 class page {
