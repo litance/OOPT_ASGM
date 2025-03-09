@@ -14,7 +14,7 @@ import java.util.Scanner;
 public class main {
     //mydatabase.db can change to your database name (but must end with .db lah)
     static final String url = "jdbc:sqlite:mydatabase.db";
-    public static final String ANSI_RED = "\u001B[31m";;
+    public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_YELLOW = "\u001B[33m";
     public static final String ANSI_BLUE = "\u001B[34m";
@@ -25,12 +25,9 @@ public class main {
     public static void main(String[] args) {
         database();
         Scanner sc = new Scanner(System.in);
-        UserCheck userCheck = new UserCheck();
-
         String role = "guest";
 
         System.out.println("Staff Page");
-
         while (true) {
             System.out.println(ANSI_GREEN + "[1] Login" + ANSI_RESET);
             System.out.println(ANSI_YELLOW + "[2] Logout" + ANSI_RESET);
@@ -48,7 +45,7 @@ public class main {
 
             switch (staffPageChoice) {
                 case 1:
-                    role = UserCheck.login(sc);
+                    role = user.login(sc);
                     break;
                 case 2:
                     System.out.println(ANSI_PURPLE + "Logout successful!" + ANSI_RESET);
@@ -99,27 +96,7 @@ public class main {
 
 //Check the username user wants to register exists or not
 //If the people got same name I dunno
-class UserCheck {
-    public void checkUser(String username) {
-        String queryStaff = "SELECT * FROM staff WHERE username = ?";
-
-        try (Connection conn = DriverManager.getConnection(main.url);
-             PreparedStatement stmt = conn.prepareStatement(queryStaff)) {
-
-            stmt.setString(1, username);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    System.out.println(main.ANSI_YELLOW + "Username already exists!" + main.ANSI_RESET);
-                } else {
-                    System.out.println(main.ANSI_RED + "Username is available." + main.ANSI_RESET);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
+class user {
     //Admin role needed to reg
     public static void register(String role, Scanner sc) {
         if (!role.equals("admin")) {
@@ -139,7 +116,7 @@ class UserCheck {
                 }
                 switch (returnChoice) {
                     case 1:
-                        role = UserCheck.login(sc);
+                        role = user.login(sc);
                         break;
                     case 2:
                         page.managementPage(role, sc);
@@ -252,7 +229,7 @@ class page {
             }
             switch (choice) {
                 case 1:
-                    UserCheck.register(role, sc);
+                    user.register(role, sc);
                     break;
                 case 2:
                     System.out.println("Report");
@@ -294,7 +271,7 @@ class page {
                     break;
                 case 0:
                     System.out.println("Return");
-                    return;
+                    main.main(new String[]{});
                 default:
                     System.out.println(main.ANSI_RED + "Invalid choice! Please try again." + main.ANSI_RESET);
                     break;
