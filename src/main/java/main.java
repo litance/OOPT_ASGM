@@ -199,6 +199,8 @@ class UserCheck {
 
 class page {
     //After login, staff can process Borrow/Return Book here
+    //I havent add the function yet
+    //This is just a temp save
     public static void mainPage() {
 
     }
