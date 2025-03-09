@@ -57,7 +57,7 @@ public class main {
                 case 0:
                     System.out.println(ANSI_YELLOW + "Exiting..." + ANSI_RESET);
                     sc.close();
-                    return;
+                    System.exit(0);
                 default:
                     System.out.println(ANSI_RED + "Invalid choice. Please try again." + ANSI_RESET);
             }
@@ -355,6 +355,7 @@ class page {
                 choice = sc.nextInt();
             } else {
                 System.out.println(main.ANSI_RED + "Invalid input! Please enter a number." + main.ANSI_RESET);
+                sc.next();
                 continue;
             }
             switch (choice) {
