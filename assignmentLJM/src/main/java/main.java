@@ -214,6 +214,11 @@ class user {
                 return "staff";
             }
 
+            else {
+                System.out.println("Unavailable username or password");
+                return "guest";
+            }
+
         } catch (SQLException e) {
             System.out.println(main.ANSI_RED + "Error: " + e.getMessage() + main.ANSI_RESET);
         } finally {
