@@ -30,7 +30,7 @@ public class main {
         //So user needs to login
         String role = "guest";
 
-        System.out.println("Staff Page");
+        System.out.println(ANSI_PURPLE + "Staff Page" + ANSI_RESET);
         while (true) {
             System.out.println(ANSI_GREEN + "[1] Login" + ANSI_RESET);
             System.out.println(ANSI_YELLOW + "[2] Logout" + ANSI_RESET);
@@ -295,21 +295,21 @@ class page {
     public static void mainPage() {
         Scanner sc = new Scanner(System.in);
         while (true) {
-            System.out.println("Main Page");
-            System.out.println("[0] Return");
-            System.out.print("Enter your choice: ");
+            System.out.println(main.ANSI_PURPLE + "Main Page" + main.ANSI_RESET);
+            System.out.println(main.ANSI_RED + "[0] Return" + main.ANSI_RESET);
+            System.out.print(main.ANSI_BLUE + "Enter your choice: " + main.ANSI_RESET);
 
             int choice;
             if (sc.hasNextInt()){
                 choice = sc.nextInt();
             } else {
-                System.out.println("Invalid choice");
+                System.out.println(main.ANSI_RED + "Invalid choice" + main.ANSI_RESET);
                 sc.next();
                 continue;
             }
             switch (choice) {
                 case 0:
-                    System.out.println("Returning...");
+                    System.out.println(main.ANSI_PURPLE + "Returning..." + main.ANSI_RESET);
                     return;
             }
         }
@@ -382,6 +382,7 @@ class page {
     //So I put a Report page first lah
     public static void managementPage(String role, Scanner sc) {
         while(true) {
+            System.out.println(main.ANSI_PURPLE + "Management Page" + main.ANSI_RESET);
             System.out.println(main.ANSI_GREEN + "[1] Register Staff" +main.ANSI_RESET);
             System.out.println(main.ANSI_GREEN + "[2] Manage Staff" +main.ANSI_RESET);
             System.out.println(main.ANSI_GREEN + "[3] Report" + main.ANSI_RESET);
@@ -434,11 +435,9 @@ class page {
 
             switch(pageChoice){
                 case 1:
-                    System.out.println("Main Page");
                     page.mainPage();
                     break;
                 case 2:
-                    System.out.println("Management Page");
                     page.managementPage(role, sc);
                     break;
                 case 0:
