@@ -25,6 +25,9 @@ public class main {
     public static void main(String[] args) {
         database();
         Scanner sc = new Scanner(System.in);
+        //If didn't get any operation, the role will be guest
+        //Guest cannot do anything lah
+        //So user needs to login
         String role = "guest";
 
         System.out.println("Staff Page");
@@ -47,7 +50,13 @@ public class main {
                 case 1:
                     role = user.login(sc);
                     if (!role.equals("guest")) {
-                        page.pageChoose(role, sc);
+                        if (role.equals("admin")) {
+                            page.pageChoose(role, sc);
+                            break;
+                        } else {
+                            page.mainPage();
+                            break;
+                        }
                     }
                     break;
                 case 2:
@@ -70,11 +79,14 @@ public class main {
                 "password VARCHAR(50) NOT NULL);";
 
         String createStaffTable = "CREATE TABLE IF NOT EXISTS staff (" +
-                "username VARCHAR(50) UNIQUE NOT NULL," +
-                "password VARCHAR(50) NOT NULL," +
-                "phonenumber VARCHAR(50)," +
-                "gender CHAR(1)," +
-                "position VARCHAR(50));";
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username VARCHAR(50) UNIQUE NOT NULL, " +
+                "gender CHAR(1), " +
+                "phonenumber TEXT, " +
+                "email VARCHAR(50) NOT NULL, " +
+                "icnumber TEXT, " +
+                "position VARCHAR(50), " +
+                "password VARCHAR(50) NOT NULL);";
 
         Connection conn = null;
         Statement stmt = null;
@@ -125,14 +137,18 @@ class user {
         sc.nextLine();
         System.out.print("Enter username: ");
         String username = sc.nextLine();
-        System.out.print("Enter password: ");
-        String password = sc.nextLine();
-        System.out.print("Enter phone number: ");
-        String phonenumber = sc.nextLine();
         System.out.print("Enter gender (M/F): ");
         String gender = sc.nextLine();
+        System.out.print("Enter phone number: ");
+        String phonenumber = sc.nextLine();
+        System.out.print("Enter email: ");
+        String email = sc.nextLine();
+        System.out.print("Enter IC number: ");
+        String icnumber = sc.nextLine();
         System.out.print("Enter position: ");
         String position = sc.nextLine();
+        System.out.print("Enter password: ");
+        String password = sc.nextLine();
 
         Connection conn = null;
         PreparedStatement checkStmt = null;
@@ -151,13 +167,15 @@ class user {
                 return;
             }
 
-            String insertRegister = "INSERT INTO staff (username, password, phonenumber, gender, position) VALUES (?, ?, ?, ?, ?)";
+            String insertRegister = "INSERT INTO staff (username, gender, phonenumber, email, icnumber, position, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
             pstmt = conn.prepareStatement(insertRegister);
             pstmt.setString(1, username);
-            pstmt.setString(2, password);
+            pstmt.setString(2, gender);
             pstmt.setString(3, phonenumber);
-            pstmt.setString(4, gender);
-            pstmt.setString(5, position);
+            pstmt.setString(4, email);
+            pstmt.setString(5, icnumber);
+            pstmt.setString(6, position);
+            pstmt.setString(7, password);
             pstmt.executeUpdate();
             System.out.println(main.ANSI_PURPLE + "Successfully registered!" + main.ANSI_RESET);
 
@@ -251,9 +269,9 @@ class user {
             int rowsAffected = pstmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("Successfully deleted staff: " + username);
+                System.out.println(main.ANSI_GREEN + "Successfully deleted staff: " + username +main.ANSI_RESET);
             } else {
-                System.out.println("Staff member not found: " + username);
+                System.out.println(main.ANSI_RED + "Staff member not found: " + username +main.ANSI_RESET);
             }
 
         } catch (SQLException e) {
@@ -275,7 +293,26 @@ class page {
     //I haven't added the function yet
     //This is just a temp save
     public static void mainPage() {
+        Scanner sc = new Scanner(System.in);
+        while (true) {
+            System.out.println("Main Page");
+            System.out.println("[0] Return");
+            System.out.print("Enter your choice: ");
 
+            int choice;
+            if (sc.hasNextInt()){
+                choice = sc.nextInt();
+            } else {
+                System.out.println("Invalid choice");
+                sc.next();
+                continue;
+            }
+            switch (choice) {
+                case 0:
+                    System.out.println("Returning...");
+                    return;
+            }
+        }
     }
 
     static class manageStaff {
@@ -348,7 +385,7 @@ class page {
             System.out.println(main.ANSI_GREEN + "[1] Register Staff" +main.ANSI_RESET);
             System.out.println(main.ANSI_GREEN + "[2] Manage Staff" +main.ANSI_RESET);
             System.out.println(main.ANSI_GREEN + "[3] Report" + main.ANSI_RESET);
-            System.out.println(main.ANSI_RED + "[0] Exit" + main.ANSI_RESET);
+            System.out.println(main.ANSI_RED + "[0] Return" + main.ANSI_RESET);
             System.out.print(main.ANSI_BLUE + "Enter your choice: " + main.ANSI_RESET);
             int choice;
             if (sc.hasNextInt()) {
