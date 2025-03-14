@@ -1,4 +1,4 @@
-//090325. Version
+//140325. Version
 //Need to connect SQL, please WhatsApp me to get details.
 //Or you can search about how to import SQLite in Java
 //Please download SQLite extension
@@ -48,6 +48,10 @@ public class main {
 
             switch (staffPageChoice) {
                 case 1:
+                    //Role check
+                    //If role = admin will straight to management choose page
+                    //Else if role = staff will go to main page lah
+                    //This is a simple screening method
                     role = user.login(sc);
                     if (!role.equals("guest")) {
                         if (role.equals("admin")) {
@@ -61,6 +65,8 @@ public class main {
                     break;
                 case 2:
                     System.out.println(ANSI_PURPLE + "Logout successful!" + ANSI_RESET);
+                    //If logout successful
+                    //That's mean roles will change to guest(Haven't login)
                     role = "guest";
                     break;
                 case 0:
@@ -74,6 +80,8 @@ public class main {
     }
 
     public static void database() {
+        //Create two table(Admin&Staff)
+        //If XiaoBing or ZhengYu code got database can put here
         String createAdminTable = "CREATE TABLE IF NOT EXISTS admin (" +
                 "username VARCHAR(50) PRIMARY KEY," +
                 "password VARCHAR(50) NOT NULL);";
@@ -89,6 +97,10 @@ public class main {
                 "password VARCHAR(50) NOT NULL);";
 
         Connection conn = null;
+        //I close SQLite auto connection
+        //Because it'll have bug call database lock
+        //I dunno how to fix it
+        //So I change to manual upload
         Statement stmt = null;
         Statement checkStmt = null;
         ResultSet rs = null;
@@ -104,6 +116,9 @@ public class main {
             rs = checkStmt.executeQuery(checkAdmin);
 
             if (rs.next() && rs.getInt(1) == 0) {
+                //Test insert
+                //Also can use at original factory account lah
+                //But we need to private or hide it loh
                 String insertAdmin = "INSERT INTO admin (username, password) VALUES ('admin', '12345')";
                 stmt.execute(insertAdmin);
                 System.out.println(main.ANSI_RED + "Default admin account created: admin / 12345" + main.ANSI_RESET);
@@ -157,6 +172,9 @@ class user {
 
         try {
             conn = DriverManager.getConnection(main.url);
+            //Before upload check the username exists or not
+            //If they got the same name
+            //Can register as test/test-1/test_01/test01
             String checkQuery = "SELECT username FROM staff WHERE username = ?";
             checkStmt = conn.prepareStatement(checkQuery);
             checkStmt.setString(1, username);
@@ -209,6 +227,9 @@ class user {
         try {
             conn = DriverManager.getConnection(main.url);
 
+            //I think everyone can understand this lah
+            //System see see our database got the user or not
+            //If got and password is correct, then it'll login
             String queryAdmin = "SELECT * FROM admin WHERE username = ? AND password = ?";
             String queryStaff = "SELECT * FROM staff WHERE username = ? AND password = ?";
 
