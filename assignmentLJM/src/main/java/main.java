@@ -23,8 +23,9 @@ public class main {
 
     //Ok everybody know this is main
     public static void main(String[] args) {
-        database();
         Scanner sc = new Scanner(System.in);
+        displayWelcomePage(sc);
+        database();
         //If didn't get any operation, the role will be guest
         //Guest cannot do anything lah
         //So user needs to login
@@ -77,6 +78,22 @@ public class main {
                     System.out.println(ANSI_RED + "Invalid choice. Please try again." + ANSI_RESET);
             }
         }
+    }
+
+    public static void displayWelcomePage(Scanner sc){
+        System.out.println("************************************************");
+        System.out.println("*                                              *");
+        System.out.println("*       WELCOME TO LIBRARY MANAGEMENT          *");
+        System.out.println("*               SYSTEM                         *");
+        System.out.println("*                                              *");
+        System.out.println("*                                              *");
+        System.out.println("*                                              *");
+        System.out.println("*         © 2025 Your Library Name             *");
+        System.out.println("*                                              *");
+        System.out.println("************************************************");
+        System.out.println("\n       Press ENTER to continue...");
+        sc.nextLine();
+        clear.clear();
     }
 
     public static void database() {
@@ -317,6 +334,7 @@ class page {
         Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.println(main.ANSI_PURPLE + "Main Page" + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "[1] Book Management Menu" + main.ANSI_RESET);
             System.out.println(main.ANSI_RED + "[0] Return" + main.ANSI_RESET);
             System.out.print(main.ANSI_BLUE + "Enter your choice: " + main.ANSI_RESET);
 
@@ -329,6 +347,9 @@ class page {
                 continue;
             }
             switch (choice) {
+                case 1:
+                    Book.bookManagementMenu();
+                    break;
                 case 0:
                     System.out.println(main.ANSI_PURPLE + "Returning..." + main.ANSI_RESET);
                     return;
@@ -469,6 +490,120 @@ class page {
                     System.out.println(main.ANSI_RED + "Invalid choice! Please try again." + main.ANSI_RESET);
                     break;
             }
+        }
+    }
+}
+
+class Book {
+    private int bookId;
+    private String title;
+    private String author;
+    private String Subject;
+    private int publicationYear;
+    private String status;
+
+    // Constructor, getters, and setters
+    public Book(int bookId, String title, String author, String Subject, int publicationYear, String status) {
+        this.bookId = bookId;
+        this.title = title;
+        this.author = author;
+        this.Subject = Subject;
+        this.publicationYear = publicationYear;
+        this.status = status;
+    }
+
+    public Book(String title, String author, String Subject, int publicationYear) {
+        this.title = title;
+        this.author = author;
+        this.Subject = Subject;
+        this.publicationYear = publicationYear;
+        this.status = "AVAILABLE";
+    }
+
+    // Getters and setters
+    public int getBookId() { return bookId; }
+    public void setBookId(int bookId) { this.bookId = bookId; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
+
+    public String getSubject() { return Subject; }
+    public void setSubject(String Subject) { this.Subject = Subject; }
+
+    public int getPublicationYear() { return publicationYear; }
+    public void setPublicationYear(int publicationYear) { this.publicationYear = publicationYear; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    @Override
+    public String toString() {
+        return "Book ID: " + bookId +
+                "\nTitle: " + title +
+                "\nAuthor: " + author +
+                "\nSubject: " + Subject +
+                "\nPublication Year: " + publicationYear +
+                "\nStatus: " + status;
+    }
+
+    public static void bookManagementMenu() {
+        Scanner sc = new Scanner(System.in);
+        while (true) {
+            System.out.println("\n===== Book Management =====");
+            System.out.println("1. Add New Book");
+            System.out.println("2. Update Book Details");
+            System.out.println("3. Delete Book");
+            System.out.println("4. Find Book by ID");
+            System.out.println("5. Search Books");
+            System.out.println("6. View Book Stocks");
+            System.out.println("0. Back to Main Menu");
+            System.out.print("Enter your choice: ");
+
+            int bookManagementMenu;
+            if (sc.hasNextInt()) {
+                bookManagementMenu = sc.nextInt();
+            } else {
+                System.out.println(main.ANSI_RED + "Invalid input! Please enter a number." + main.ANSI_RESET);
+                sc.next();
+                continue;
+            }
+
+            switch (bookManagementMenu) {
+                case 1:
+                    //addBook();
+                    break;
+                case 2:
+                    //updateBook();
+                    break;
+                case 3:
+                    //deleteBook();
+                    break;
+                case 4:
+                    //findBook();
+                    break;
+                case 5:
+                    //searchBooks();
+                    break;
+                case 6:
+                    //bookStocks();
+                    break;
+                case 0:
+                    System.out.println("Exit");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+}
+
+class clear{
+    public static void clear(){
+        for(int i = 0; i < 50; i++){
+            System.out.println();
         }
     }
 }
