@@ -1,4 +1,4 @@
-//140325. Version
+//150325. Version
 //Need to connect SQL, please WhatsApp me to get details.
 //Or you can search about how to import SQLite in Java
 //Please download SQLite extension
@@ -23,9 +23,8 @@ public class main {
 
     //Ok everybody know this is main
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        displayWelcomePage(sc);
         database();
+        Scanner sc = new Scanner(System.in);
         //If didn't get any operation, the role will be guest
         //Guest cannot do anything lah
         //So user needs to login
@@ -80,22 +79,6 @@ public class main {
         }
     }
 
-    public static void displayWelcomePage(Scanner sc){
-        System.out.println("************************************************");
-        System.out.println("*                                              *");
-        System.out.println("*       WELCOME TO LIBRARY MANAGEMENT          *");
-        System.out.println("*               SYSTEM                         *");
-        System.out.println("*                                              *");
-        System.out.println("*                                              *");
-        System.out.println("*                                              *");
-        System.out.println("*         © 2025 Your Library Name             *");
-        System.out.println("*                                              *");
-        System.out.println("************************************************");
-        System.out.println("\n       Press ENTER to continue...");
-        sc.nextLine();
-        clear.clear();
-    }
-
     public static void database() {
         //Create two table(Admin&Staff)
         //If XiaoBing or ZhengYu code got database can put here
@@ -113,6 +96,16 @@ public class main {
                 "position VARCHAR(50), " +
                 "password VARCHAR(50) NOT NULL);";
 
+        String createCustomerTable = "CREATE TABLE IF NOT EXISTS staff (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username VARCHAR(50) UNIQUE NOT NULL, " +
+                "gender CHAR(1), " +
+                "phonenumber TEXT, " +
+                "email VARCHAR(50) NOT NULL, " +
+                "icnumber TEXT, " +
+                "password VARCHAR(50) NOT NULL);";
+
+
         Connection conn = null;
         //I close SQLite auto connection
         //Because it'll have bug call database lock
@@ -127,6 +120,7 @@ public class main {
             stmt = conn.createStatement();
             stmt.execute(createAdminTable);
             stmt.execute(createStaffTable);
+            stmt.execute(createCustomerTable);
 
             String checkAdmin = "SELECT COUNT(*) FROM admin WHERE username = 'admin'";
             checkStmt = conn.createStatement();
@@ -228,6 +222,11 @@ class user {
         }
     }
 
+    public static void cusRegister(String role, Scanner sc) {
+
+    }
+
+
     public static String login(Scanner sc) {
         sc.nextLine();
         System.out.print("Enter Username: ");
@@ -291,32 +290,138 @@ class user {
         return "guest";
     }
 
+    public static void cusLogin(String role, Scanner sc) {
+    }
+
     public static void deleteStaff() {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter Username to delete: ");
         String username = sc.nextLine();
         String query = "DELETE FROM staff WHERE username = ?";
+        String getIdQuery = "SELECT ID FROM staff WHERE username = ?";
+        String updateIdQuery = "UPDATE staff SET ID = ID - 1 WHERE ID > ?";
 
         Connection conn = null;
         PreparedStatement pstmt = null;
+        PreparedStatement pstmtGetId = null;
+        PreparedStatement pstmtUpdateId = null;
+        ResultSet rs = null;
+        int deletedId = -1;
 
         try {
             conn = DriverManager.getConnection(main.url);
+
+            pstmtGetId = conn.prepareStatement(getIdQuery);
+            pstmtGetId.setString(1, username);
+            rs = pstmtGetId.executeQuery();
+            if (rs.next()) {
+                deletedId = rs.getInt("ID");
+            }
+
             pstmt = conn.prepareStatement(query);
             pstmt.setString(1, username);
             int rowsAffected = pstmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println(main.ANSI_GREEN + "Successfully deleted staff: " + username +main.ANSI_RESET);
+                System.out.println(main.ANSI_GREEN + "Successfully deleted staff: " + username + main.ANSI_RESET);
+
+                if (deletedId != -1) {
+                    pstmtUpdateId = conn.prepareStatement(updateIdQuery);
+                    pstmtUpdateId.setInt(1, deletedId);
+                    pstmtUpdateId.executeUpdate();
+                }
             } else {
-                System.out.println(main.ANSI_RED + "Staff member not found: " + username +main.ANSI_RESET);
+                System.out.println(main.ANSI_RED + "Staff member not found: " + username + main.ANSI_RESET);
             }
 
         } catch (SQLException e) {
             System.out.println("Database Error: " + e.getMessage());
         } finally {
             try {
+                if (rs != null) rs.close();
+                if (pstmtGetId != null) pstmtGetId.close();
+                if (pstmtUpdateId != null) pstmtUpdateId.close();
                 if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public static void editStaff() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter Username to edit: ");
+        String username = sc.nextLine();
+
+        Connection conn = null;
+        PreparedStatement pstmtView = null;
+        PreparedStatement pstmtEdit = null;
+        ResultSet rsView = null;
+
+        try {
+            conn = DriverManager.getConnection(main.url);
+
+            String preview = "SELECT * FROM staff WHERE username = ?";
+            pstmtView = conn.prepareStatement(preview);
+            pstmtView.setString(1, username);
+            rsView = pstmtView.executeQuery();
+
+            if (!rsView.next()) {
+                System.out.println(main.ANSI_RED + "User not found!" + main.ANSI_RESET);
+                return;
+            }
+
+            System.out.println(main.ANSI_PURPLE + "Current information" + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "Username: " + rsView.getString("username") + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "Gender: " + rsView.getString("gender") + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "Phone Number: " + rsView.getString("phonenumber") + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "Email: " + rsView.getString("email") + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "IC Number: " + rsView.getString("icnumber") + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "Position: " + rsView.getString("position") + main.ANSI_RESET);
+            System.out.println(main.ANSI_GREEN + "Password: " + rsView.getString("password") + main.ANSI_RESET);
+
+            System.out.print("Enter New Username: ");
+            String newUsername = sc.nextLine();
+            System.out.print("Enter New Gender: ");
+            String newGender = sc.nextLine();
+            System.out.print("Enter New Phone Number: ");
+            String newPhone = sc.nextLine();
+            System.out.print("Enter New Email: ");
+            String newEmail = sc.nextLine();
+            System.out.print("Enter New IC Number: ");
+            String newIc = sc.nextLine();
+            System.out.print("Enter New Position: ");
+            String newPosition = sc.nextLine();
+            System.out.print("Enter New Password: ");
+            String newPassword = sc.nextLine();
+
+            String editQuery = "UPDATE staff SET username = ?, gender = ?, phonenumber = ?, email = ?, icnumber = ?, position = ?, password = ? WHERE username = ?";
+            pstmtEdit = conn.prepareStatement(editQuery);
+            pstmtEdit.setString(1, newUsername);
+            pstmtEdit.setString(2, newGender);
+            pstmtEdit.setString(3, newPhone);
+            pstmtEdit.setString(4, newEmail);
+            pstmtEdit.setString(5, newIc);
+            pstmtEdit.setString(6, newPosition);
+            pstmtEdit.setString(7, newPassword);
+            pstmtEdit.setString(8, username);
+
+            int rowsAffected = pstmtEdit.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println(main.ANSI_GREEN + "Successfully updated staff: " + username + main.ANSI_RESET);
+            } else {
+                System.out.println(main.ANSI_RED + "Update failed!" + main.ANSI_RESET);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(main.ANSI_RED + "Database Error: " + e.getMessage() + main.ANSI_RESET);
+        } finally {
+            try {
+                if (rsView != null) rsView.close();
+                if (pstmtView != null) pstmtView.close();
+                if (pstmtEdit != null) pstmtEdit.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -334,7 +439,6 @@ class page {
         Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.println(main.ANSI_PURPLE + "Main Page" + main.ANSI_RESET);
-            System.out.println(main.ANSI_GREEN + "[1] Book Management Menu" + main.ANSI_RESET);
             System.out.println(main.ANSI_RED + "[0] Return" + main.ANSI_RESET);
             System.out.print(main.ANSI_BLUE + "Enter your choice: " + main.ANSI_RESET);
 
@@ -347,9 +451,6 @@ class page {
                 continue;
             }
             switch (choice) {
-                case 1:
-                    Book.bookManagementMenu();
-                    break;
                 case 0:
                     System.out.println(main.ANSI_PURPLE + "Returning..." + main.ANSI_RESET);
                     return;
@@ -403,6 +504,7 @@ class page {
                 }
                 switch (pageChoice) {
                     case 1:
+                        user.editStaff();
                         break;
                     case 2:
                         printTableData("staff");
@@ -490,120 +592,6 @@ class page {
                     System.out.println(main.ANSI_RED + "Invalid choice! Please try again." + main.ANSI_RESET);
                     break;
             }
-        }
-    }
-}
-
-class Book {
-    private int bookId;
-    private String title;
-    private String author;
-    private String Subject;
-    private int publicationYear;
-    private String status;
-
-    // Constructor, getters, and setters
-    public Book(int bookId, String title, String author, String Subject, int publicationYear, String status) {
-        this.bookId = bookId;
-        this.title = title;
-        this.author = author;
-        this.Subject = Subject;
-        this.publicationYear = publicationYear;
-        this.status = status;
-    }
-
-    public Book(String title, String author, String Subject, int publicationYear) {
-        this.title = title;
-        this.author = author;
-        this.Subject = Subject;
-        this.publicationYear = publicationYear;
-        this.status = "AVAILABLE";
-    }
-
-    // Getters and setters
-    public int getBookId() { return bookId; }
-    public void setBookId(int bookId) { this.bookId = bookId; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-
-    public String getSubject() { return Subject; }
-    public void setSubject(String Subject) { this.Subject = Subject; }
-
-    public int getPublicationYear() { return publicationYear; }
-    public void setPublicationYear(int publicationYear) { this.publicationYear = publicationYear; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    @Override
-    public String toString() {
-        return "Book ID: " + bookId +
-                "\nTitle: " + title +
-                "\nAuthor: " + author +
-                "\nSubject: " + Subject +
-                "\nPublication Year: " + publicationYear +
-                "\nStatus: " + status;
-    }
-
-    public static void bookManagementMenu() {
-        Scanner sc = new Scanner(System.in);
-        while (true) {
-            System.out.println("\n===== Book Management =====");
-            System.out.println("1. Add New Book");
-            System.out.println("2. Update Book Details");
-            System.out.println("3. Delete Book");
-            System.out.println("4. Find Book by ID");
-            System.out.println("5. Search Books");
-            System.out.println("6. View Book Stocks");
-            System.out.println("0. Back to Main Menu");
-            System.out.print("Enter your choice: ");
-
-            int bookManagementMenu;
-            if (sc.hasNextInt()) {
-                bookManagementMenu = sc.nextInt();
-            } else {
-                System.out.println(main.ANSI_RED + "Invalid input! Please enter a number." + main.ANSI_RESET);
-                sc.next();
-                continue;
-            }
-
-            switch (bookManagementMenu) {
-                case 1:
-                    //addBook();
-                    break;
-                case 2:
-                    //updateBook();
-                    break;
-                case 3:
-                    //deleteBook();
-                    break;
-                case 4:
-                    //findBook();
-                    break;
-                case 5:
-                    //searchBooks();
-                    break;
-                case 6:
-                    //bookStocks();
-                    break;
-                case 0:
-                    System.out.println("Exit");
-                    return;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-            }
-        }
-    }
-}
-
-class clear{
-    public static void clear(){
-        for(int i = 0; i < 50; i++){
-            System.out.println();
         }
     }
 }
